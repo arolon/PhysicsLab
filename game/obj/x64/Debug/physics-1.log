@@ -1,2 +1,4 @@
 ﻿  main.cpp
+D:\Docs\GDev\3\GamePhysics\G2005_Physics_F2026\game\src\main.cpp(40,10): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+D:\Docs\GDev\3\GamePhysics\G2005_Physics_F2026\game\src\main.cpp(41,19): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
   physics-1.vcxproj -> D:\Docs\GDev\3\GamePhysics\G2005_Physics_F2026\bin\Debug\physics-1.exe
