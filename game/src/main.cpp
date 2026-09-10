@@ -8,8 +8,9 @@ See documentation here: https://www.raylib.com/, and examples here: https://www.
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
 
-const unsigned int TARGET_FPS = 50;
-float time = 0;
+const unsigned int TARGET_FPS = 60;
+float frame = 0;
+float time;;
 int main()
 {
     InitWindow(1200, 800, "Physics-1");
@@ -19,13 +20,15 @@ int main()
     {
         BeginDrawing();
             ClearBackground(WHITE);
-            DrawText("Hello world my name is Alvaro!", 10, 10, 20, LIGHTGRAY);
+            DrawText("Game Physics - Alvaro Rolon 101538323!", 10, 760, 25, LIGHTGRAY);
+            
 
+            frame += 1;
+            time = frame / 60.0f;
 
-            time += 1;
+            DrawText(TextFormat("Time: %.2f", time), 1000, 20, 25, LIGHTGRAY);
 
-            GuiSliderBar(Rectangle{ 60, 5, 1000, 10 }, "Time", TextFormat("%.2f", time), &time, 0, 240);
-
+            /*GuiSliderBar(Rectangle{60, 5, 1000, 10}, "Time", TextFormat("%.2f", time), &frame, 0, 240);*/
 
         EndDrawing();
     }
