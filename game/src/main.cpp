@@ -43,8 +43,11 @@ public:
     Vector2 gravity = { 0, 9.81f };
     std::vector<PhysicsBody> bodies;
     const float FIXED_DELTA_TIME = 1.0f / (float)TARGET_FPS;
+	float frame = 0.0f, time;
 
 	void Update() {
+        frame += 1;
+        time = frame * FIXED_DELTA_TIME;
 		for (int i = 0; i < bodies.size(); i++)
 		{
 			bodies[i].velocity += gravity * FIXED_DELTA_TIME;
