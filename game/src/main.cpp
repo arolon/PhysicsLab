@@ -34,8 +34,15 @@ public:
 	float drag = 0.0f;
 	float radius = 20.0f;
 	Color color = BLUE;
+	float gravityScale = 1.0f;
 };
 //PhysicsBody bird = { {100, 700}, {0, 0}, 1.0f };
+bool isOverlapping(PhysicsBody a, PhysicsBody b) {
+	Vector2 displacement = b.position - a.position;
+	float distance = Vector2LengthSqr(displacement);
+	float sumRadius = a.radius + b.radius;
+	return distance < sumRadius * sumRadius;
+}
 
 class PhysicsWorld
 {
@@ -48,12 +55,30 @@ public:
 	void Update() {
         frame += 1;
         time = frame * FIXED_DELTA_TIME;
+		//Update positions
 		for (int i = 0; i < bodies.size(); i++)
 		{
-			bodies[i].velocity += gravity * FIXED_DELTA_TIME;
+			bodies[i].velocity += gravity * FIXED_DELTA_TIME * bodies[i].gravityScale;
 			bodies[i].position += bodies[i].velocity * FIXED_DELTA_TIME;
 
 			bodies[i].velocity *= 1.0f - bodies[i].drag * FIXED_DELTA_TIME;
+			bodies[i].color = GREEN;
+		}
+		//Update Collisions
+		for (int i = 0; i < bodies.size(); i++)
+		{
+			for (int j = i + 1; j < bodies.size(); j++)
+			{
+				if (isOverlapping(bodies[i], bodies[j]))
+				{
+					bodies[i].color = RED;
+					bodies[j].color = RED;
+				}
+				/*else {
+					bodies[i].color = GREEN;
+					bodies[j].color = GREEN;
+				}*/
+			}
 		}
 	}
 
@@ -72,6 +97,9 @@ int main()
     InitWindow(1200, 800, "Physics-Labs");
     SetTargetFPS(TARGET_FPS);
 	launchPosition = { 100, 700 };
+
+	PhysicsBody target = { { 1000, 700 }, { 0, 0 }, 1.0f, 0.0f, 50.0f, YELLOW, 0.0f };
+	world.bodies.push_back(target);
 
     while (!WindowShouldClose())
     {
