@@ -21,6 +21,8 @@ float launchAngle = 45.0f;
 
 float launchPositionAdjustment = 50.0f;
 
+Vector2	windowSize = { 1200, 800 };
+
 //Week 3
 
 //float gravity = 9.81f;
@@ -44,6 +46,25 @@ bool isOverlapping(PhysicsBody a, PhysicsBody b) {
 	return distance < sumRadius * sumRadius;
 }
 
+struct Bounds2D
+{
+	Vector2 min;
+	Vector2 max;
+	float margin = 50.0f;
+
+	Bounds2D()
+	{
+		min = { -margin, -margin };
+		max = { windowSize.x + margin, windowSize.y + margin };
+	}
+
+	bool isInside( Vector2& position)
+	{
+		return position.x >= min.x && position.x <= max.x &&
+			position.y >= min.y && position.y <= max.y;
+	}
+};
+
 class PhysicsWorld
 {
 public:
@@ -51,6 +72,17 @@ public:
     std::vector<PhysicsBody> bodies;
     const float FIXED_DELTA_TIME = 1.0f / (float)TARGET_FPS;
 	float frame = 0.0f, time;
+	Bounds2D bounds;
+
+	void addBody(PhysicsBody body) {
+		bodies.push_back(body);
+	}
+
+	void deleteBody(int index) {
+		if (index >= 0 && index < bodies.size()) {
+			bodies.erase(bodies.begin() + index);
+		}
+	}
 
 	void Update() {
         frame += 1;
@@ -63,6 +95,12 @@ public:
 
 			bodies[i].velocity *= 1.0f - bodies[i].drag * FIXED_DELTA_TIME;
 			bodies[i].color = GREEN;
+
+			if (!bounds.isInside(bodies[i].position))
+			{
+				deleteBody(i);
+			}
+			std::cout << bodies.size() << std::endl;
 		}
 		//Update Collisions
 		for (int i = 0; i < bodies.size(); i++)
@@ -88,13 +126,16 @@ public:
 			DrawCircleV(bodies[i].position, bodies[i].radius, bodies[i].color);
 		}
 	}
+
 };
+
+
 
 PhysicsWorld world;
 
 int main()
 {
-    InitWindow(1200, 800, "Physics-Labs");
+    InitWindow(windowSize.x, windowSize.y, "Physics-Labs");
     SetTargetFPS(TARGET_FPS);
 	launchPosition = { 100, 700 };
 
