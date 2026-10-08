@@ -1,4 +1,8 @@
 ﻿  main.cpp
-D:\Docs\GDev\3\GamePhysics\G2005_Physics_F2026\game\src\main.cpp(133,40): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-D:\Docs\GDev\3\GamePhysics\G2005_Physics_F2026\game\src\main.cpp(133,26): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+D:\Docs\GDev\3\GamePhysics\G2005_Physics_F2026\game\src\main.cpp(139,40): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+D:\Docs\GDev\3\GamePhysics\G2005_Physics_F2026\game\src\main.cpp(139,26): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+D:\Docs\GDev\3\GamePhysics\G2005_Physics_F2026\game\src\main.cpp(178,38): warning C4838: conversion from 'int' to 'unsigned char' requires a narrowing conversion
+D:\Docs\GDev\3\GamePhysics\G2005_Physics_F2026\game\src\main.cpp(178,62): warning C4838: conversion from 'int' to 'unsigned char' requires a narrowing conversion
+D:\Docs\GDev\3\GamePhysics\G2005_Physics_F2026\game\src\main.cpp(178,86): warning C4838: conversion from 'int' to 'unsigned char' requires a narrowing conversion
+D:\Docs\GDev\3\GamePhysics\G2005_Physics_F2026\game\src\main.cpp(179,17): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
   physics-1.vcxproj -> D:\Docs\GDev\3\GamePhysics\G2005_Physics_F2026\bin\Debug\physics-1.exe

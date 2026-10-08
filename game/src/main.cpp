@@ -35,8 +35,9 @@ public:
 	float mass = 1.0f;
 	float drag = 0.0f;
 	float radius = 20.0f;
-	Color color = BLUE;
+	Color initialColor = BLUE;
 	float gravityScale = 1.0f;
+	Color color = initialColor;
 };
 //PhysicsBody bird = { {100, 700}, {0, 0}, 1.0f };
 bool isOverlapping(PhysicsBody a, PhysicsBody b) {
@@ -94,7 +95,7 @@ public:
 			bodies[i].position += bodies[i].velocity * FIXED_DELTA_TIME;
 
 			bodies[i].velocity *= 1.0f - bodies[i].drag * FIXED_DELTA_TIME;
-			bodies[i].color = GREEN;
+			bodies[i].color = bodies[i].initialColor;
 
 			if (!bounds.isInside(bodies[i].position))
 			{
@@ -174,7 +175,9 @@ int main()
         {
 			//bird.position = launchPosition;
 			//bird.velocity = velocity;
-			PhysicsBody newBody = { launchPosition, velocity, 1.0f, 0.0f, 20.0f, BLUE };
+			Color bodyColor = { GetRandomValue(0, 255), GetRandomValue(0, 255), GetRandomValue(0, 255), 255 };
+			float radius = GetRandomValue(10, 50);
+			PhysicsBody newBody = { launchPosition, velocity, 1.0f, 0.0f, radius, bodyColor };
 			world.bodies.push_back(newBody);
 			
         }
