@@ -27,6 +27,71 @@ Vector2	windowSize = { 1200, 800 };
 
 //float gravity = 9.81f;
 
+enum ColliderShape {
+	CIRCLE,
+	HALFPLANE
+};
+
+class Collider {
+public:
+	virtual ColliderShape GetShape() = 0;
+	virtual void Draw() = 0;
+
+};
+
+class Circle : public Collider {
+public:
+	float radius;
+
+	Circle(float r) {
+		radius = r;
+	}
+
+	ColliderShape GetShape() override {
+		return CIRCLE;
+	}
+
+	void Draw() override {
+		// Draw the circle at the origin with a default color
+		DrawCircleV({ 0, 0 }, radius, BLUE);
+	}
+
+	void Draw(Vector2 position, Color color) {
+		DrawCircleV(position, radius, color);
+	}
+};
+
+class HalfPlane : public Collider {
+public:
+	Vector2 normal;
+
+	HalfPlane(Vector2 n = { 0, -1 }) {
+		normal = Vector2Normalize(n);
+	}
+
+	ColliderShape GetShape() override {
+		return HALFPLANE;
+	}
+
+	void Draw() override {
+
+	}
+
+	void Draw(Vector2 position, Color planeColor = GRAY, Color normalColor = RED) {
+		Vector2 tangent = { -normal.y, normal.x };
+		float planeLength = 2000.0f;
+		Vector2 planeStart = position + (tangent * -planeLength);
+		Vector2 planeEnd = position + (tangent * planeLength);
+		DrawLineEx(planeStart, planeEnd, 2.0f, planeColor);
+
+		float normalLength = 50.0f;
+		Vector2 normalEnd = position + (normal * -normalLength);
+		DrawLineEx(position, normalEnd, 2.0f, normalColor);
+
+		DrawCircleV(position, 3.0f, normalColor);
+	}
+};
+
 class PhysicsBody 
 {
 public:
@@ -34,21 +99,34 @@ public:
 	Vector2 velocity;
 	float mass = 1.0f;
 	float drag = 0.0f;
-	float radius = 20.0f;
+	//float radius = 20.0f;
 	Color initialColor = BLUE;
 	float gravityScale = 1.0f;
 	Color color = initialColor;
+
+	Collider* collider = nullptr;
 };
+
 //PhysicsBody bird = { {100, 700}, {0, 0}, 1.0f };
-bool isOverlapping(PhysicsBody a, PhysicsBody b) {
+bool isOverlappingCircleCircle(PhysicsBody a, PhysicsBody b) {
 	Vector2 displacement = b.position - a.position;
 	float distance = Vector2LengthSqr(displacement);
-	float sumRadius = a.radius + b.radius;
+
+	float radA = ((Circle*)a.collider)->radius;
+	float radB = ((Circle*)b.collider)->radius;
+	float sumRadius = radA + radB;
 	return distance < sumRadius * sumRadius;
 }
 
-struct Bounds2D
+bool isOverlappingCircleHalfPlane(PhysicsBody circle, PhysicsBody halfplane) {
+	Vector2 displacement = halfplane.position - circle.position;
+	float dot = Vector2DotProduct(displacement, ((HalfPlane*)halfplane.collider)->normal);
+	return dot < ((Circle*)circle.collider)->radius;
+}
+
+class Bounds2D
 {
+public:
 	Vector2 min;
 	Vector2 max;
 	float margin = 50.0f;
@@ -108,10 +186,19 @@ public:
 		{
 			for (int j = i + 1; j < bodies.size(); j++)
 			{
-				if (isOverlapping(bodies[i], bodies[j]))
+				if (bodies[i].collider->GetShape() == CIRCLE && bodies[j].collider->GetShape() == CIRCLE && isOverlappingCircleCircle(bodies[i], bodies[j]))
 				{
 					bodies[i].color = RED;
 					bodies[j].color = RED;
+				}
+				if (bodies[i].collider->GetShape() == CIRCLE && bodies[j].collider->GetShape() == HALFPLANE && isOverlappingCircleHalfPlane(bodies[i], bodies[j]))
+				{
+					bodies[i].color = YELLOW;
+					bodies[j].color = YELLOW;
+				} else if (bodies[i].collider->GetShape() == HALFPLANE && bodies[j].collider->GetShape() == CIRCLE && isOverlappingCircleHalfPlane(bodies[j], bodies[i]))
+				{
+					bodies[i].color = YELLOW;
+					bodies[j].color = YELLOW;
 				}
 				/*else {
 					bodies[i].color = GREEN;
@@ -124,13 +211,20 @@ public:
 	void Draw() {
 		for (int i = 0; i < bodies.size(); i++)
 		{
-			DrawCircleV(bodies[i].position, bodies[i].radius, bodies[i].color);
+			if (bodies[i].collider && bodies[i].collider->GetShape() == CIRCLE)
+			{
+				((Circle*)bodies[i].collider)->Draw(bodies[i].position, bodies[i].color);
+
+				//DrawCircleV(bodies[i].position, ((Circle*)bodies[i].collider)->radius, bodies[i].color);
+			}
+			else if (bodies[i].collider && bodies[i].collider->GetShape() == HALFPLANE)
+			{
+				((HalfPlane*)bodies[i].collider)->Draw(bodies[i].position, bodies[i].color);
+			}
 		}
 	}
 
 };
-
-
 
 PhysicsWorld world;
 
@@ -140,8 +234,13 @@ int main()
     SetTargetFPS(TARGET_FPS);
 	launchPosition = { 100, 700 };
 
-	PhysicsBody target = { { 1000, 700 }, { 0, 0 }, 1.0f, 0.0f, 50.0f, YELLOW, 0.0f };
-	world.bodies.push_back(target);
+	/*PhysicsBody target = { { 1000, 700 }, { 0, 0 }, 1.0f, 0.0f, YELLOW, 0.0f };
+	target.collider = new Circle(50.0f);
+	world.bodies.push_back(target);*/
+
+	PhysicsBody ground = { { 500, 500 }, { 0, 0 }, 1.0f, 0.0f, RED, 0.0f };
+	ground.collider = new HalfPlane({499,499});
+	world.bodies.push_back(ground);
 
     while (!WindowShouldClose())
     {
@@ -177,7 +276,8 @@ int main()
 			//bird.velocity = velocity;
 			Color bodyColor = { GetRandomValue(0, 255), GetRandomValue(0, 255), GetRandomValue(0, 255), 255 };
 			float radius = GetRandomValue(10, 50);
-			PhysicsBody newBody = { launchPosition, velocity, 1.0f, 0.0f, radius, bodyColor };
+			PhysicsBody newBody = { launchPosition, velocity, 1.0f, 0.0f, bodyColor };
+			newBody.collider = new Circle(radius);
 			world.bodies.push_back(newBody);
 			
         }
