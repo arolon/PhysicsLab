@@ -16,7 +16,7 @@ float frame = 0;
 //float frequency = 5.0f;
 
 Vector2 birdPosition, velocity, launchPosition;
-float launchSpeed = 100.0f;
+float launchSpeed = 120.0f;
 float launchAngle = 45.0f;
 
 float launchPositionAdjustment = 50.0f;
@@ -38,6 +38,9 @@ public:
 	Color initialColor = BLUE;
 	float gravityScale = 1.0f;
 	Color color = initialColor;
+
+	bool alive = true;
+	float ownTime = 0.0f;
 };
 //PhysicsBody bird = { {100, 700}, {0, 0}, 1.0f };
 bool isOverlapping(PhysicsBody a, PhysicsBody b) {
@@ -69,7 +72,7 @@ struct Bounds2D
 class PhysicsWorld
 {
 public:
-    Vector2 gravity = { 0, 9.81f };
+    Vector2 gravity = { 0, 20.0f };
     std::vector<PhysicsBody> bodies;
     const float FIXED_DELTA_TIME = 1.0f / (float)TARGET_FPS;
 	float frame = 0.0f, time;
@@ -91,11 +94,17 @@ public:
 		//Update positions
 		for (int i = 0; i < bodies.size(); i++)
 		{
-			bodies[i].velocity += gravity * FIXED_DELTA_TIME * bodies[i].gravityScale;
-			bodies[i].position += bodies[i].velocity * FIXED_DELTA_TIME;
+			if (bodies[i].alive && bodies[i].position.y != launchPosition.y) {
+				bodies[i].velocity += gravity * FIXED_DELTA_TIME * bodies[i].gravityScale;
+				bodies[i].position += bodies[i].velocity * FIXED_DELTA_TIME;
 
-			bodies[i].velocity *= 1.0f - bodies[i].drag * FIXED_DELTA_TIME;
-			bodies[i].color = bodies[i].initialColor;
+				bodies[i].velocity *= 1.0f - bodies[i].drag * FIXED_DELTA_TIME;
+				bodies[i].color = bodies[i].initialColor;
+				bodies[i].ownTime += FIXED_DELTA_TIME;
+			}
+			else {
+				bodies[i].alive = false;
+			}
 
 			if (!bounds.isInside(bodies[i].position))
 			{
@@ -125,6 +134,8 @@ public:
 		for (int i = 0; i < bodies.size(); i++)
 		{
 			DrawCircleV(bodies[i].position, bodies[i].radius, bodies[i].color);
+			DrawText(TextFormat("X: %.2f", bodies[i].position.x-launchPosition.x), bodies[i].position.x - 20, bodies[i].position.y, 20, BLACK);
+			DrawText(TextFormat("Time: %.2f", bodies[i].ownTime), bodies[i].position.x - 20, bodies[i].position.y + 20, 20, BLACK);
 		}
 	}
 
@@ -140,8 +151,8 @@ int main()
     SetTargetFPS(TARGET_FPS);
 	launchPosition = { 100, 700 };
 
-	PhysicsBody target = { { 1000, 700 }, { 0, 0 }, 1.0f, 0.0f, 50.0f, YELLOW, 0.0f };
-	world.bodies.push_back(target);
+	/*PhysicsBody target = { { 1000, 700 }, { 0, 0 }, 1.0f, 0.0f, 50.0f, YELLOW, 0.0f };
+	world.bodies.push_back(target);*/
 
     while (!WindowShouldClose())
     {
@@ -150,7 +161,7 @@ int main()
         ClearBackground(SKYBLUE);
 
         GuiSlider(Rectangle{100,5,400,20}, "Launch Speed", TextFormat("%.2f", launchSpeed), &launchSpeed, 1, 200);
-        GuiSlider(Rectangle{100,30,400,20}, "Launch Angle", TextFormat("%.2f", launchAngle), &launchAngle, -90, 90);
+        GuiSlider(Rectangle{100,30,400,20}, "Launch Angle", TextFormat("%.2f", launchAngle), &launchAngle, -0, 45);
         GuiSlider(Rectangle{ 100,60,400,20 }, "Gravity", TextFormat("%.2f", world.gravity.y), &world.gravity.y, -20.0f, 20.0f);
         GuiSlider(Rectangle{ 100,90,400,20 }, "Gravity in X", TextFormat("%.2f", world.gravity.x), &world.gravity.x, -20.0f, 20.0f);
 
@@ -164,6 +175,7 @@ int main()
 
         velocity = { launchSpeed * cosf(launchAngle * DEG2RAD), launchSpeed * -sinf(launchAngle * DEG2RAD) };
 		DrawCircleV(launchPosition, 20, RED);
+		DrawLineEx(launchPosition, launchPosition + Vector2{launchPosition.x + 800, 0}, 2, BLUE);
         DrawLineEx(launchPosition, launchPosition + velocity, 2, RED);
 
 		DrawText(TextFormat("Launch Position: (%.2f, %.2f)", launchPosition.x, launchPosition.y), 600, 5, 20, RED);
