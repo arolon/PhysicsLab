@@ -107,6 +107,22 @@ public:
 	Collider* collider = nullptr;
 };
 
+bool ResolveCollisionCircle(PhysicsBody& a, PhysicsBody& b) {
+	Vector2 displacement = b.position - a.position;
+	float distance = Vector2Length(displacement);
+
+	float radA = ((Circle*)a.collider)->radius;
+	float radB = ((Circle*)b.collider)->radius;
+	float overlap = radA + radB - distance;
+	if (overlap > 0) {
+		float mtv = Vector2LengthSqr(displacement) / distance * overlap;
+		a.velocity -= displacement * (mtv / distance);
+		b.velocity += displacement * (mtv / distance);
+		return true;
+	}
+	return false;
+}
+
 //PhysicsBody bird = { {100, 700}, {0, 0}, 1.0f };
 bool isOverlappingCircleCircle(PhysicsBody a, PhysicsBody b) {
 	Vector2 displacement = b.position - a.position;
@@ -122,6 +138,17 @@ bool isOverlappingCircleHalfPlane(PhysicsBody circle, PhysicsBody halfplane) {
 	Vector2 displacement = halfplane.position - circle.position;
 	float dot = Vector2DotProduct(displacement, ((HalfPlane*)halfplane.collider)->normal);
 	return dot < ((Circle*)circle.collider)->radius;
+}
+
+bool resolveCollisionCircleHalfPlane(PhysicsBody& circle, PhysicsBody& halfplane) {
+	Vector2 displacement = halfplane.position - circle.position;
+	float distance = Vector2DotProduct(displacement, ((HalfPlane*)halfplane.collider)->normal);
+	float overlap = ((Circle*)circle.collider)->radius - distance;
+	if (overlap >= 0) {
+		circle.position -= ((HalfPlane*)halfplane.collider)->normal * overlap;
+		return true;
+	}
+	return false;
 }
 
 class Bounds2D
@@ -186,16 +213,17 @@ public:
 		{
 			for (int j = i + 1; j < bodies.size(); j++)
 			{
-				if (bodies[i].collider->GetShape() == CIRCLE && bodies[j].collider->GetShape() == CIRCLE && isOverlappingCircleCircle(bodies[i], bodies[j]))
+				if (bodies[i].collider->GetShape() == CIRCLE && bodies[j].collider->GetShape() == CIRCLE && ResolveCollisionCircle(bodies[i], bodies[j]))
 				{
 					bodies[i].color = RED;
 					bodies[j].color = RED;
+
 				}
-				if (bodies[i].collider->GetShape() == CIRCLE && bodies[j].collider->GetShape() == HALFPLANE && isOverlappingCircleHalfPlane(bodies[i], bodies[j]))
+				if (bodies[i].collider->GetShape() == CIRCLE && bodies[j].collider->GetShape() == HALFPLANE && resolveCollisionCircleHalfPlane(bodies[i], bodies[j]))
 				{
 					bodies[i].color = YELLOW;
 					bodies[j].color = YELLOW;
-				} else if (bodies[i].collider->GetShape() == HALFPLANE && bodies[j].collider->GetShape() == CIRCLE && isOverlappingCircleHalfPlane(bodies[j], bodies[i]))
+				} else if (bodies[i].collider->GetShape() == HALFPLANE && bodies[j].collider->GetShape() == CIRCLE && resolveCollisionCircleHalfPlane(bodies[j], bodies[i]))
 				{
 					bodies[i].color = YELLOW;
 					bodies[j].color = YELLOW;
